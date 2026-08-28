@@ -1,0 +1,10 @@
+{
+  "steps": 720,
+  "dt_minutes": 1.0,
+  "start_hour": 6.0,
+  "seed": 21,
+  "grid_disconnect_step": -1,
+  "grid_reconnect_step": -1,
+  "network": {"loss_probability": 0.01, "latency_steps": 1, "jitter_steps": 1, "seed": 13},
+  "attack": {"start_step": 10000, "end_step": 10001, "soc_bias": 0.0, "pv_bias_kw": 0.0, "load_bias_kw": 0.0, "voltage_bias_pu": 0.0, "frequency_bias_hz": 0.0, "replay": false, "freeze": false, "rewrite_replay_metadata": false}
+}
