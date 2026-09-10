@@ -33,7 +33,7 @@ def run_simulation(config: SimulationConfig | None = None):
     cfg=config or SimulationConfig(); rng=np.random.default_rng(cfg.seed)
     plant=MicrogridModel(); ems=EnergyManager(); net=NetworkChannel(cfg.network); twin=DigitalTwin(); detector=HybridDetector(); freshness=FreshnessMonitor(); trust=TrustManager(); supervisor=ResilienceSupervisor()
     dt_h=cfg.dt_minutes/60.0; last_packet=None; replay_snapshot=None; freeze_snapshot=None; last_command=0.0
-    out={k:[] for k in ["time_h","soc_true","soc_measured","soc_twin","pv_kw","load_kw","battery_kw","grid_kw","frequency_hz","frequency_measured_hz","frequency_twin_hz","voltage_pu","voltage_measured_pu","voltage_twin_pu","unserved_kw","served_kw","anomaly_score","anomaly","attack_active","packet_received","trust_soc","trust_pv","trust_load","supervisor_state"]}
+    out={k:[] for k in ["time_h","soc_true","soc_measured","soc_twin","pv_kw","load_kw","battery_kw","grid_kw","frequency_hz","frequency_measured_hz","frequency_twin_hz","voltage_pu","voltage_measured_pu","voltage_twin_pu","unserved_kw","served_kw","anomaly_score","anomaly","attack_active","packet_received","communication_fault","telemetry_age_s","trust_soc","trust_pv","trust_load","supervisor_state"]}
     out["dt_h"]=dt_h
     grid_connected=True
     for step in range(cfg.steps):
@@ -60,23 +60,38 @@ def run_simulation(config: SimulationConfig | None = None):
         net.send(attacked); received=net.receive(); rx=received[-1] if received else None
         if rx is not None: last_packet=rx
         active_packet=last_packet or packet
+        now_s=step*cfg.dt_minutes*60.0
         pred_balance = state.pv_power_kw + state.battery_power_kw + state.grid_power_kw - state.load_power_kw
         pred=twin.predict(last_command,pred_balance,grid_connected,dt_h)
-        fr=freshness.check(active_packet, step*cfg.dt_minutes*60.0)
-        temp_score=temporal_score_fn(fr.stale_sequence,fr.stale_timestamp,fr.age_s,max_age_s=max(60.0,3*cfg.dt_minutes*60.0))
-        bal=power_balance_residual_kw(active_packet.values)
-        score,alarm,source_scores=detector.evaluate(active_packet.values,pred,temp_score,bal)
-        trust_scores=trust.update(source_scores); isolated=isolate_source(source_scores)
-        sup=supervisor.update(alarm,score,isolated,grid_connected,state.unserved_load_kw)
+        communication_fault=rx is None
+        if rx is not None:
+            # Freshness is evidence about a newly received packet. Re-checking a
+            # held packet on every no-delivery step falsely converts ordinary
+            # network gaps into replay alarms.
+            fr=freshness.check(rx, now_s)
+            temp_score=temporal_score_fn(fr.stale_sequence,fr.stale_timestamp,fr.age_s,max_age_s=max(60.0,3*cfg.dt_minutes*60.0))
+            bal=power_balance_residual_kw(rx.values)
+            score,alarm,source_scores=detector.evaluate(rx.values,pred,temp_score,bal)
+            trust_scores=trust.update(source_scores)
+            isolated=isolate_source(source_scores)
+        else:
+            score=0.0
+            alarm=False
+            source_scores={}
+            trust_scores=dict(trust.scores)
+            isolated=None
+        sup=supervisor.update(alarm,score,isolated,grid_connected,state.unserved_load_kw,communication_fault=communication_fault)
         last_command=state.battery_power_kw
         attack_active=cfg.attack.start_step <= step < cfg.attack.end_step
+        telemetry_age_s=max(0.0, now_s-active_packet.timestamp_s)
         vals={
             "time_h":hour,"soc_true":state.battery_soc,"soc_measured":active_packet.values["soc"],"soc_twin":pred["soc"],
             "pv_kw":state.pv_power_kw,"load_kw":state.load_power_kw,"battery_kw":state.battery_power_kw,"grid_kw":state.grid_power_kw,
             "frequency_hz":state.frequency_hz,"frequency_measured_hz":active_packet.values["frequency_hz"],"frequency_twin_hz":pred["frequency_hz"],
             "voltage_pu":state.voltage_pu,"voltage_measured_pu":active_packet.values["voltage_pu"],"voltage_twin_pu":pred["voltage_pu"],
             "unserved_kw":state.unserved_load_kw,"served_kw":state.served_load_kw,"anomaly_score":score,"anomaly":int(alarm),
-            "attack_active":int(attack_active),"packet_received":int(rx is not None),"trust_soc":trust_scores["soc"],"trust_pv":trust_scores["pv_kw"],"trust_load":trust_scores["load_kw"],"supervisor_state":int(sup),
+            "attack_active":int(attack_active),"packet_received":int(rx is not None),"communication_fault":int(communication_fault),"telemetry_age_s":telemetry_age_s,
+            "trust_soc":trust_scores["soc"],"trust_pv":trust_scores["pv_kw"],"trust_load":trust_scores["load_kw"],"supervisor_state":int(sup),
         }
         for k,v in vals.items(): out[k].append(v)
     for k,v in list(out.items()):
@@ -87,7 +102,7 @@ def summarize(result):
     cyber=cyber_metrics(result["attack_active"],result["anomaly"]); electrical=electrical_metrics(result)
     return {
         "samples":int(len(result["anomaly"])),"anomaly_samples":int(np.sum(result["anomaly"])),"max_anomaly_score":float(np.max(result["anomaly_score"])),
-        "packet_delivery_fraction":float(np.mean(result["packet_received"])),"service_resilience":service_resilience(result["served_kw"],result["load_kw"]),
+        "packet_delivery_fraction":float(np.mean(result["packet_received"])),"communication_fault_fraction":float(np.mean(result["communication_fault"])),"mean_telemetry_age_s":float(np.mean(result["telemetry_age_s"])),"service_resilience":service_resilience(result["served_kw"],result["load_kw"]),
         "min_trust_soc":float(np.min(result["trust_soc"])),"min_trust_pv":float(np.min(result["trust_pv"])),"min_trust_load":float(np.min(result["trust_load"])),
         **cyber, **electrical,
     }
