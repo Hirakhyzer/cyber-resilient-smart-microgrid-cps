@@ -17,7 +17,7 @@ class ResilienceSupervisor:
         self.state = SupervisorState.NORMAL
         self.clear_count = 0
 
-    def update(self, anomaly: bool, score: float, isolated_source: str | None, grid_connected: bool, unserved_kw: float) -> SupervisorState:
+    def update(self, anomaly: bool, score: float, isolated_source: str | None, grid_connected: bool, unserved_kw: float, communication_fault: bool = False) -> SupervisorState:
         if unserved_kw > 15.0 or score >= 3.5:
             self.state = SupervisorState.EMERGENCY
             self.clear_count = 0
@@ -30,6 +30,12 @@ class ResilienceSupervisor:
         elif not grid_connected:
             self.state = SupervisorState.ISLANDED
             self.clear_count += 1
+        elif communication_fault:
+            # Missing telemetry should cause caution without being counted as a
+            # cyber alarm. This keeps communication degradation distinct from
+            # replay/spoof evidence in the cyber metrics.
+            self.state = SupervisorState.WATCH
+            self.clear_count = 0
         elif score >= 0.7:
             self.state = SupervisorState.WATCH
             self.clear_count = 0
