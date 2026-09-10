@@ -62,10 +62,11 @@ PV + Battery + Loads + Utility Grid
 - temporal freshness checks;
 - persistence-based hybrid detector;
 - per-source trust scores;
-- suspect-source isolation baseline.
+- suspect-source isolation baseline;
+- timestamp-aligned comparison for delayed telemetry.
 
 ### Resilient control
-Supervisor states include `NORMAL`, `WATCH`, `CYBER_ANOMALY`, `ISOLATE_SOURCE`, `DEGRADED_OPERATION`, `ISLANDED`, `RECOVERY`, and `EMERGENCY`. The illustrative EMS can refuse low-trust SOC information and reduce/zero battery commands under severe cyber evidence.
+Supervisor states include `NORMAL`, `WATCH`, `CYBER_ANOMALY`, `ISOLATE_SOURCE`, `DEGRADED_OPERATION`, `ISLANDED`, `RECOVERY`, and `EMERGENCY`. The illustrative EMS can refuse low-trust SOC information and reduce/zero battery commands under severe cyber evidence. Missing telemetry is treated as a communication condition (`WATCH`) rather than automatically counted as a replay/cyber alarm.
 
 ## Quick start
 
@@ -114,7 +115,18 @@ python scripts/run_benchmark.py
 
 ## Metrics
 
-The benchmark reports cyber metrics (TP/FP/FN/TN, precision, recall, F1), electrical metrics (frequency/voltage deviation, SOC, unserved energy), communication delivery, source-trust minima, supervisory behavior, and a service-resilience ratio.
+Cyber classification is packet-aligned: an alarm is scored against the ground-truth label of the **delivered telemetry observation that produced it**, rather than against the attack state of the current simulation step. The simulation-only label is not visible to the detector or controller.
+
+The benchmark separates:
+
+- packet-level precision/recall/F1 over delivered observations;
+- attack packet delivery and end-to-end attack recall;
+- true packet delivery fraction versus fraction of steps with any packet arrival;
+- communication-fault fraction and telemetry age;
+- electrical frequency/voltage deviation, SOC, and unserved energy;
+- source-trust minima, supervisory behavior, and service resilience.
+
+This separation prevents delay/jitter from silently distorting cyber recall and prevents multiple packets arriving in one step from being mistaken for packet loss. See `docs/BENCHMARK_PROTOCOL.md` for definitions.
 
 ## Repository map
 
