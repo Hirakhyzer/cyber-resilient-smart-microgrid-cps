@@ -1,5 +1,12 @@
 name: CI
 on: [push, pull_request]
+
+# Keep only the newest CI run for a branch/ref. During rapid research commits,
+# superseded runs are cancelled so obsolete intermediate states do not create
+# unnecessary failure noise.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
