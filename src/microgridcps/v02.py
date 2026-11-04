@@ -11,7 +11,7 @@ from .control.supervisor import ResilienceSupervisor
 from .cyber.telemetry import TelemetryPacket
 from .cyber.network import NetworkChannel, NetworkConfig
 from .cyber.attacks import AttackConfig, apply_attack
-from .cyber.freshness import FreshnessMonitor
+from .cyber.freshness import ReorderingAwareFreshnessMonitor
 from .cyber.trust import TrustManager
 from .twin.digital_twin import DigitalTwin
 from .twin.estimator import TelemetryStateEstimator
@@ -100,7 +100,7 @@ def run_v02_simulation(config: V02SimulationConfig | None = None):
         }
     )
     detector = UncertaintyAwareHybridDetector()
-    freshness = FreshnessMonitor()
+    freshness = ReorderingAwareFreshnessMonitor(\n        reorder_window_steps=cfg.network.jitter_steps,\n        step_seconds=cfg.dt_minutes * 60.0,\n    )
     trust = TrustManager()
     supervisor = ResilienceSupervisor()
     pv_dynamics = TemporalIntegrityMonitor(window=6, stagnation_epsilon=0.05, mismatch_tolerance=2.5)
@@ -215,7 +215,7 @@ def run_v02_simulation(config: V02SimulationConfig | None = None):
                 fr.stale_sequence,
                 fr.stale_timestamp,
                 fr.age_s,
-                max_age_s=max(60.0, 3 * dt_s),
+                max_age_s=max(60.0, (cfg.network.latency_steps + cfg.network.jitter_steps + 1) * dt_s),
             )
             pv_temporal = pv_dynamics.update(rx.values["pv_kw"], pred_for_rx.get("pv_kw", rx.values["pv_kw"]))
             load_temporal = load_dynamics.update(rx.values["load_kw"], pred_for_rx.get("load_kw", rx.values["load_kw"]))
