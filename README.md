@@ -170,7 +170,8 @@ src/microgridcps/
 ├── control/    # EMS, local command guard, supervisor, restoration
 ├── agents/     # lightweight distributed-agent abstractions
 ├── metrics/    # cyber, electrical, resilience metrics
-├── simulation.py # preserved v0.1 baseline loop\n└── v02.py        # additive telemetry-grounded v0.2 loop
+├── simulation.py # preserved v0.1 baseline loop
+└── v02.py        # additive telemetry-grounded v0.2 loop
 ```
 
 ## Standards/research context
