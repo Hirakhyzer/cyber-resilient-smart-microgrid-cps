@@ -22,7 +22,7 @@ from .security.temporal_integrity import TemporalIntegrityMonitor
 from .security.isolation import isolate_source
 from .metrics.cyber import cyber_metrics
 from .metrics.electrical import electrical_metrics
-from .metrics.resilience import service_resilience
+from .metrics.resilience import critical_load_resilience, service_resilience
 from .metrics.experiments import detection_delay_seconds, supervisor_occupancy
 
 
@@ -349,7 +349,7 @@ def summarize_v02(result):
         "disturbance_alarm_fraction": disturbance_alarm_fraction,
         "benign_step_alarm_fraction": benign_step_alarm_fraction,
         "false_positive_rate": false_positive_rate,
-        "service_resilience": service_resilience(result["served_kw"], result["load_kw"]),
+        "service_resilience": service_resilience(result["served_kw"], result["load_kw"]),\n        "critical_load_resilience": critical_load_resilience(result["served_kw"], result["load_kw"]),
         "mean_soc_uncertainty": float(np.nanmean(result["soc_uncertainty"])),
         "min_trust_soc": float(np.min(result["trust_soc"])),
         "min_trust_pv": float(np.min(result["trust_pv"])),
