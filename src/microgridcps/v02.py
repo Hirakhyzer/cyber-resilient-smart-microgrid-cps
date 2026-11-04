@@ -100,7 +100,10 @@ def run_v02_simulation(config: V02SimulationConfig | None = None):
         }
     )
     detector = UncertaintyAwareHybridDetector()
-    freshness = ReorderingAwareFreshnessMonitor(\n        reorder_window_steps=cfg.network.jitter_steps,\n        step_seconds=cfg.dt_minutes * 60.0,\n    )
+    freshness = ReorderingAwareFreshnessMonitor(
+        reorder_window_steps=cfg.network.jitter_steps,
+        step_seconds=cfg.dt_minutes * 60.0,
+    )
     trust = TrustManager()
     supervisor = ResilienceSupervisor()
     pv_dynamics = TemporalIntegrityMonitor(window=6, stagnation_epsilon=0.05, mismatch_tolerance=2.5)
