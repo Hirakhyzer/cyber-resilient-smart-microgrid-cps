@@ -17,7 +17,10 @@ jobs:
       - name: Run preserved v0.1 deterministic benchmark suite
         if: matrix.python-version == '3.12'
         run: python scripts/run_benchmark.py
-      - name: Run compact v0.2 multi-seed experiment suite
+      - name: Run compact v0.2 resilience experiment suite
+        if: matrix.python-version == '3.12'
+        run: python scripts/run_resilience_experiments.py --ci
+      - name: Run compact v0.2 telemetry robustness suite
         if: matrix.python-version == '3.12'
         run: python scripts/run_v02_experiments.py --ci
       - name: Compare preserved v0.1 and v0.2
