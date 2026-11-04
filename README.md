@@ -69,35 +69,40 @@ PV + Battery + Loads + Utility Grid
 Supervisor states include `NORMAL`, `WATCH`, `CYBER_ANOMALY`, `ISOLATE_SOURCE`, `DEGRADED_OPERATION`, `ISLANDED`, `RECOVERY`, and `EMERGENCY`. The illustrative EMS can refuse low-trust SOC information and reduce/zero battery commands under severe cyber evidence. Missing telemetry is treated as a communication condition (`WATCH`) rather than automatically counted as a replay/cyber alarm.
 
 
-## v0.2 — telemetry-grounded experimental layer
+## v0.2 — resilient smart microgrid experimental layer
 
-v0.2 is **additive**: the original v0.1 simulation and benchmark remain available for comparison. The new `microgridcps.v02` path removes simulator-assisted controller/twin inputs and adds stronger experiments without rewriting the baseline.
+v0.2 is **additive**: the original v0.1 simulation and benchmark remain available for comparison, while the new `microgridcps.v02` path strengthens the project as a resilient smart-microgrid CPS research platform.
+
+The primary v0.2 emphasis is now **operational resilience**, not attack detection. Security scenarios remain available as one stress class, alongside physical and communication disturbances.
 
 Key v0.2 additions:
 
-- controller-facing SOC no longer falls back to hidden plant truth when telemetry is missing;
-- the digital twin no longer receives true plant power balance in the v0.2 path;
-- delivered telemetry corrects a transparent state estimator with an uncertainty envelope that grows during prediction-only periods;
-- bounded packet reordering is separated from replay evidence using the configured jitter budget;
-- PV and load anomaly evidence are scored independently for clearer source attribution;
-- windowed value-dynamics evidence targets freeze and metadata-rewritten replay;
-- detection delay, false-positive rate, benign-step alarms, estimator uncertainty, supervisor occupancy, aggregate service, and critical-load service proxy are reported;
-- the main v0.2 study runs 14 cyber/communication/physical scenarios across multiple deterministic seeds;
-- a separate script compares preserved v0.1 and v0.2 on shared scenarios.
+- telemetry-grounded state estimation with uncertainty growth during measurement loss;
+- no hidden plant-SOC or true-power-balance fallback in the v0.2 controller/twin path;
+- configurable initial SOC, battery-capacity scale, PV-capacity scale, and critical-load fraction;
+- resilience metrics for aggregate service, critical service, minimum service fraction, islanding performance, unserved energy, and post-reconnection recovery;
+- dedicated islanding-duration, resource-availability, renewable-variability, load-stress, communication-degradation, and combined-stress experiments;
+- the existing cyber/telemetry suite retained as a secondary robustness study rather than the main v0.2 research story.
 
-Compact two-seed CI screening currently shows 0% FPR for normal and lossy/high-latency operation, 95% recall for rewritten replay in the shared v0.2 comparison, and a remaining freeze weakness at 53.75% recall with long delay. Legitimate cloud/load disturbances remain a cyber-versus-physical attribution challenge rather than being tuned away. See [v0.2 Experimental Protocol](docs/V02_EXPERIMENTS.md) and [v0.2 Baseline Findings](docs/V02_BASELINE_FINDINGS.md).
+Run the primary v0.2 resilience study:
 
-Run the full default v0.2 multi-seed study:
+```bash
+python scripts/run_resilience_experiments.py
+```
+
+Run the compact deterministic resilience screen used by CI:
+
+```bash
+python scripts/run_resilience_experiments.py --ci
+```
+
+The existing telemetry/security stress study remains available:
 
 ```bash
 python scripts/run_v02_experiments.py
 ```
 
-Compare the preserved v0.1 and v0.2 paths:
-
-```bash
-python scripts/run_v02_comparison.py
-```
+See [v0.2 Resilience Experiments](docs/V02_RESILIENCE_EXPERIMENTS.md) for the primary protocol. The earlier [v0.2 Experimental Protocol](docs/V02_EXPERIMENTS.md) and [v0.2 Baseline Findings](docs/V02_BASELINE_FINDINGS.md) are preserved for reproducibility.
 
 ## Quick start
 
@@ -171,7 +176,7 @@ src/microgridcps/
 ├── agents/     # lightweight distributed-agent abstractions
 ├── metrics/    # cyber, electrical, resilience metrics
 ├── simulation.py # preserved v0.1 baseline loop
-└── v02.py        # additive telemetry-grounded v0.2 loop
+└── v02.py        # additive resilience/state-estimation v0.2 loop
 ```
 
 ## Standards/research context
@@ -182,4 +187,4 @@ The project is informed by NIST OT/DER cybersecurity guidance and the IEEE 1547 
 
 All generated traces are synthetic unless explicitly replaced with externally sourced data. Report the Git commit, configuration, random seed, attack window, network assumptions, detector thresholds, parameter provenance, and held-out evaluation conditions in any publication.
 
-See [Architecture](docs/ARCHITECTURE.md), [Microgrid Model](docs/MICROGRID_MODEL.md), [Digital Twin](docs/DIGITAL_TWIN.md), [Threat Model](docs/THREAT_MODEL.md), [Attack Catalog](docs/ATTACK_CATALOG.md), [Detection Method](docs/DETECTION_METHOD.md), [Resilience Control](docs/RESILIENCE_CONTROL.md), [Benchmark Protocol](docs/BENCHMARK_PROTOCOL.md), [v0.2 Experimental Protocol](docs/V02_EXPERIMENTS.md), [v0.2 Baseline Findings](docs/V02_BASELINE_FINDINGS.md), [Reproducibility](docs/REPRODUCIBILITY.md), and [Research Roadmap](docs/RESEARCH_ROADMAP.md).
+See [Architecture](docs/ARCHITECTURE.md), [Microgrid Model](docs/MICROGRID_MODEL.md), [Digital Twin](docs/DIGITAL_TWIN.md), [Resilience Control](docs/RESILIENCE_CONTROL.md), [Benchmark Protocol](docs/BENCHMARK_PROTOCOL.md), [v0.2 Resilience Experiments](docs/V02_RESILIENCE_EXPERIMENTS.md), [v0.2 Experimental Protocol](docs/V02_EXPERIMENTS.md), [v0.2 Baseline Findings](docs/V02_BASELINE_FINDINGS.md), [Threat Model](docs/THREAT_MODEL.md), [Attack Catalog](docs/ATTACK_CATALOG.md), [Detection Method](docs/DETECTION_METHOD.md), [Reproducibility](docs/REPRODUCIBILITY.md), and [Research Roadmap](docs/RESEARCH_ROADMAP.md).
