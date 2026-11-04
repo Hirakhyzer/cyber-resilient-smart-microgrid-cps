@@ -102,7 +102,9 @@ The existing telemetry/security stress study remains available:
 python scripts/run_v02_experiments.py
 ```
 
-See [v0.2 Resilience Experiments](docs/V02_RESILIENCE_EXPERIMENTS.md) for the primary protocol. The earlier [v0.2 Experimental Protocol](docs/V02_EXPERIMENTS.md) and [v0.2 Baseline Findings](docs/V02_BASELINE_FINDINGS.md) are preserved for reproducibility.
+The first compact two-seed resilience screen already separates easy and difficult operating conditions: long islanding retains 0.9935 aggregate service resilience, cloudy and high-load islanding fall to about 0.81, and the combined operational-stress case falls to 0.5624. These are synthetic regression-screening results, not operational guarantees.
+
+See [v0.2 Resilience Experiments](docs/V02_RESILIENCE_EXPERIMENTS.md) and [v0.2 Resilience Baseline](docs/V02_RESILIENCE_BASELINE.md). The earlier [v0.2 Experimental Protocol](docs/V02_EXPERIMENTS.md) and [v0.2 Baseline Findings](docs/V02_BASELINE_FINDINGS.md) are preserved for reproducibility.
 
 ## Quick start
 
@@ -187,4 +189,4 @@ The project is informed by NIST OT/DER cybersecurity guidance and the IEEE 1547 
 
 All generated traces are synthetic unless explicitly replaced with externally sourced data. Report the Git commit, configuration, random seed, attack window, network assumptions, detector thresholds, parameter provenance, and held-out evaluation conditions in any publication.
 
-See [Architecture](docs/ARCHITECTURE.md), [Microgrid Model](docs/MICROGRID_MODEL.md), [Digital Twin](docs/DIGITAL_TWIN.md), [Resilience Control](docs/RESILIENCE_CONTROL.md), [Benchmark Protocol](docs/BENCHMARK_PROTOCOL.md), [v0.2 Resilience Experiments](docs/V02_RESILIENCE_EXPERIMENTS.md), [v0.2 Experimental Protocol](docs/V02_EXPERIMENTS.md), [v0.2 Baseline Findings](docs/V02_BASELINE_FINDINGS.md), [Threat Model](docs/THREAT_MODEL.md), [Attack Catalog](docs/ATTACK_CATALOG.md), [Detection Method](docs/DETECTION_METHOD.md), [Reproducibility](docs/REPRODUCIBILITY.md), and [Research Roadmap](docs/RESEARCH_ROADMAP.md).
+See [Architecture](docs/ARCHITECTURE.md), [Microgrid Model](docs/MICROGRID_MODEL.md), [Digital Twin](docs/DIGITAL_TWIN.md), [Resilience Control](docs/RESILIENCE_CONTROL.md), [Benchmark Protocol](docs/BENCHMARK_PROTOCOL.md), [v0.2 Resilience Experiments](docs/V02_RESILIENCE_EXPERIMENTS.md), [v0.2 Resilience Baseline](docs/V02_RESILIENCE_BASELINE.md), [v0.2 Experimental Protocol](docs/V02_EXPERIMENTS.md), [v0.2 Baseline Findings](docs/V02_BASELINE_FINDINGS.md), [Threat Model](docs/THREAT_MODEL.md), [Attack Catalog](docs/ATTACK_CATALOG.md), [Detection Method](docs/DETECTION_METHOD.md), [Reproducibility](docs/REPRODUCIBILITY.md), and [Research Roadmap](docs/RESEARCH_ROADMAP.md).
