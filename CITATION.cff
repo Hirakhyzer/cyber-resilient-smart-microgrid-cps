@@ -2,10 +2,11 @@ cff-version: 1.2.0
 message: "If you use this research software, please cite the repository and the specific commit or release used."
 title: "Cyber-Resilient Smart Microgrid Cyber-Physical System"
 type: software
+version: "0.2.0"
 authors:
   - name: "Hira Khyzer"
 repository-code: "https://github.com/Hirakhyzer/cyber-resilient-smart-microgrid-cps"
-abstract: "Defensive research platform for smart-microgrid cyber resilience using DER models, battery storage, digital twins, synthetic cyber/fault injection, hybrid anomaly detection, trust scoring, and resilient energy management."
+abstract: "Defensive research platform for smart-microgrid cyber resilience using DER models, battery storage, digital twins, synthetic cyber/fault injection, telemetry-grounded state estimation, uncertainty-aware and temporal anomaly evidence, trust scoring, resilient energy management, and multi-seed cyber-physical experiments."
 keywords:
   - cyber-physical systems
   - smart microgrid
@@ -13,3 +14,5 @@ keywords:
   - digital twin
   - cybersecurity
   - resilient control
+  - state estimation
+  - replay detection
