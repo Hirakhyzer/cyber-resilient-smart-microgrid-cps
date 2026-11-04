@@ -5,6 +5,9 @@ import math
 import numpy as np
 
 from .physical.microgrid import MicrogridModel
+from .physical.battery import BatteryParams
+from .physical.pv import PVParams
+from .physical.loads import LoadParams
 from .control.energy_manager import EnergyManager
 from .control.local_control import trusted_command
 from .control.supervisor import ResilienceSupervisor
@@ -48,6 +51,31 @@ class PhysicalDisturbanceConfig:
 
 
 @dataclass(frozen=True)
+class ResourceStressConfig:
+    """Physical resource assumptions for resilience sensitivity studies.
+
+    Defaults reproduce the existing reduced-order plant. Scaling parameters are
+    intentionally simple and transparent; they are experiment controls rather
+    than calibrated degradation models.
+    """
+
+    initial_soc: float = 0.65
+    battery_capacity_scale: float = 1.0
+    pv_capacity_scale: float = 1.0
+    critical_fraction: float = 0.55
+
+    def __post_init__(self) -> None:
+        if not math.isfinite(self.initial_soc) or not 0.15 < self.initial_soc <= 0.95:
+            raise ValueError("initial_soc must be finite and in (0.15, 0.95]")
+        if not math.isfinite(self.battery_capacity_scale) or self.battery_capacity_scale <= 0.0:
+            raise ValueError("battery_capacity_scale must be finite and positive")
+        if not math.isfinite(self.pv_capacity_scale) or self.pv_capacity_scale <= 0.0:
+            raise ValueError("pv_capacity_scale must be finite and positive")
+        if not math.isfinite(self.critical_fraction) or not 0.0 < self.critical_fraction <= 1.0:
+            raise ValueError("critical_fraction must be finite and in (0, 1]")
+
+
+@dataclass(frozen=True)
 class V02SimulationConfig:
     steps: int = 720
     dt_minutes: float = 1.0
@@ -58,6 +86,7 @@ class V02SimulationConfig:
     network: NetworkConfig = NetworkConfig()
     attack: AttackConfig = AttackConfig(start_step=10_000, end_step=10_001)
     disturbance: PhysicalDisturbanceConfig = PhysicalDisturbanceConfig()
+    resources: ResourceStressConfig = ResourceStressConfig()
     trust_threshold: float = 0.35
     max_control_telemetry_age_steps: int = 3
 
@@ -85,10 +114,17 @@ def run_v02_simulation(config: V02SimulationConfig | None = None):
     """
     cfg = config or V02SimulationConfig()
     rng = np.random.default_rng(cfg.seed)
-    plant = MicrogridModel()
+    plant = MicrogridModel(
+        battery_params=BatteryParams(
+            capacity_kwh=120.0 * cfg.resources.battery_capacity_scale,
+            initial_soc=cfg.resources.initial_soc,
+        ),
+        pv_params=PVParams(capacity_kw=60.0 * cfg.resources.pv_capacity_scale),
+        load_params=LoadParams(critical_fraction=cfg.resources.critical_fraction),
+    )
     ems = EnergyManager()
     net = NetworkChannel(cfg.network)
-    twin = DigitalTwin()
+    twin = DigitalTwin(capacity_kwh=118.0 * cfg.resources.battery_capacity_scale)
     estimator = TelemetryStateEstimator(
         {
             "soc": twin.state.soc,
@@ -128,10 +164,13 @@ def run_v02_simulation(config: V02SimulationConfig | None = None):
         "voltage_pu", "voltage_measured_pu", "voltage_twin_pu", "unserved_kw", "served_kw",
         "anomaly_score", "anomaly", "attack_active", "disturbance_active", "packet_received",
         "delivered_packet_count", "communication_fault", "telemetry_age_s", "trust_soc", "trust_pv",
-        "trust_load", "supervisor_state", "soc_uncertainty",
+        "trust_load", "supervisor_state", "soc_uncertainty", "grid_connected",
     ]
     out = {key: [] for key in keys}
     out["dt_h"] = dt_h
+    out["critical_fraction"] = cfg.resources.critical_fraction
+    out["grid_disconnect_step"] = cfg.grid_disconnect_step
+    out["grid_reconnect_step"] = cfg.grid_reconnect_step
 
     for step in range(cfg.steps):
         if step == cfg.grid_disconnect_step:
@@ -301,6 +340,7 @@ def run_v02_simulation(config: V02SimulationConfig | None = None):
             "trust_load": trust_scores["load_kw"],
             "supervisor_state": int(sup),
             "soc_uncertainty": current_estimate.uncertainty.get("soc", math.nan),
+            "grid_connected": int(grid_connected),
         }
         for key, value in vals.items():
             out[key].append(value)
@@ -350,7 +390,11 @@ def summarize_v02(result):
         "benign_step_alarm_fraction": benign_step_alarm_fraction,
         "false_positive_rate": false_positive_rate,
         "service_resilience": service_resilience(result["served_kw"], result["load_kw"]),
-        "critical_load_resilience": critical_load_resilience(result["served_kw"], result["load_kw"]),
+        "critical_load_resilience": critical_load_resilience(
+            result["served_kw"],
+            result["load_kw"],
+            critical_fraction=float(result.get("critical_fraction", 0.55)),
+        ),
         "mean_soc_uncertainty": float(np.nanmean(result["soc_uncertainty"])),
         "min_trust_soc": float(np.min(result["trust_soc"])),
         "min_trust_pv": float(np.min(result["trust_pv"])),
