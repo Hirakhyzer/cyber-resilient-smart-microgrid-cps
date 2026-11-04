@@ -19,9 +19,9 @@ class TemporalIntegrityResult:
 class TemporalIntegrityMonitor:
     """Windowed value-dynamics monitor for v0.2 replay/freeze experiments.
 
-    It does not declare an attack by itself. It measures whether delivered values
-    are implausibly stagnant or whether observed change is inconsistent with the
-    twin-predicted change. This is simulation-only research evidence.
+    It does not declare an attack by itself. Stagnation evidence is intentionally
+    conservative: the observed signal must be nearly constant while the expected
+    signal changes by more than the configured mismatch tolerance.
     """
 
     def __init__(self, window: int = 6, stagnation_epsilon: float = 1e-4, mismatch_tolerance: float = 0.02):
@@ -50,8 +50,8 @@ class TemporalIntegrityMonitor:
         obs_range = max(self.observed) - min(self.observed)
         pred_range = max(self.predicted) - min(self.predicted)
         stagnation_score = 0.0
-        if pred_range > self.stagnation_epsilon:
-            stagnation_score = pred_range / max(obs_range, self.stagnation_epsilon)
+        if obs_range <= self.stagnation_epsilon and pred_range > self.mismatch_tolerance:
+            stagnation_score = pred_range / self.mismatch_tolerance
 
         observed_change = self.observed[-1] - self.observed[-2]
         predicted_change = self.predicted[-1] - self.predicted[-2]
