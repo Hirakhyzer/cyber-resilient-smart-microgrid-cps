@@ -2,7 +2,7 @@ import pytest
 
 from microgridcps.twin.estimator import EstimatorConfig, ExponentialStateEstimator, TelemetryStateEstimator
 from microgridcps.twin.uncertainty import uncertainty_aware_score
-from microgridcps.security.temporal_integrity import TemporalIntegrityMonitor
+from microgridcps.security.temporal_integrity import TemporalIntegrityMonitor\nfrom microgridcps.cyber.freshness import ReorderingAwareFreshnessMonitor\nfrom microgridcps.cyber.telemetry import TelemetryPacket
 
 
 def test_estimator_uncertainty_grows_without_measurements_and_contracts_on_correction():
@@ -46,3 +46,13 @@ def test_temporal_integrity_does_not_flag_matching_change_as_stagnation():
     assert result is not None
     assert result.stagnation_score <= 1.1
     assert result.change_mismatch_score < 0.1
+
+
+def test_reordering_aware_freshness_tolerates_bounded_jitter_but_flags_old_replay():
+    monitor = ReorderingAwareFreshnessMonitor(reorder_window_steps=1, step_seconds=60.0)
+    first = monitor.check(TelemetryPacket(2, 120.0, {"soc": 0.5}), now_s=120.0)
+    reordered = monitor.check(TelemetryPacket(1, 60.0, {"soc": 0.5}), now_s=180.0)
+    old = monitor.check(TelemetryPacket(0, 0.0, {"soc": 0.5}), now_s=240.0)
+    assert not first.stale_sequence and not first.stale_timestamp
+    assert not reordered.stale_sequence and not reordered.stale_timestamp
+    assert old.stale_sequence and old.stale_timestamp
