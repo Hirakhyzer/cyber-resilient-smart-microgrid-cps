@@ -1,5 +1,7 @@
 # v0.2 Experimental Protocol
 
+> **Scope note:** this document preserves the telemetry/security robustness study. The primary v0.2 direction is now the resilience-first protocol in [V02_RESILIENCE_EXPERIMENTS.md](V02_RESILIENCE_EXPERIMENTS.md), which emphasizes islanding, resource sufficiency, service continuity, uncertainty, and restoration.
+
 v0.2 is an additive research layer. The preserved v0.1 simulator and benchmark remain available so changes in results can be attributed to explicit methodological changes rather than a silent rewrite of the baseline.
 
 ## Research objective
