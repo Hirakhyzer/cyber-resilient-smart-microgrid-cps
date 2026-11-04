@@ -3,20 +3,21 @@
 ## v0.1 — reproducible reduced-order CPS baseline
 Physical DERs, network effects, synthetic attacks/faults, reduced-order digital twin, hybrid detector, trust, supervisor, EMS, packet-aligned metrics, tests, and CI.
 
-## v0.2 — telemetry-grounded temporal integrity and stronger experiments
+## v0.2 — resilience, state estimation, and stronger simulation studies
 **Implemented as an additive experimental layer while preserving v0.1.**
 
-Current v0.2 includes:
-- controller/twin paths that do not fall back to hidden plant SOC or true plant power balance;
-- transparent telemetry state estimation with an explicit uncertainty envelope;
-- bounded-reordering freshness semantics derived from the configured channel model;
-- independent PV/load residual evidence for clearer source attribution;
-- windowed change/stagnation evidence for freeze and metadata-rewritten replay studies;
-- detection-delay, false-positive, benign-alarm, uncertainty, supervisor-occupancy, and critical-load service metrics;
-- multi-seed cyber, communication, physical-disturbance, islanding, and combined-stress experiments;
-- preserved v0.1 versus v0.2 comparison studies.
+Primary v0.2 direction:
+- telemetry-grounded state estimation with explicit uncertainty;
+- reduced-order islanding-duration studies;
+- initial-SOC, battery-capacity, and PV-capacity sensitivity experiments;
+- cloud and load-variation studies;
+- degraded-communication and combined-stress simulation cases;
+- aggregate and critical-load service metrics, minimum service fraction, unserved energy, islanding-period performance, and post-reconnection recovery metrics;
+- preserved telemetry/security experiments as a secondary robustness layer.
 
-The current estimator is intentionally transparent and is **not** claimed to be an EKF/UKF or formally calibrated uncertainty model. Remaining v0.2 research includes stronger freeze/change-point detection, cyber-versus-physical disturbance attribution, and estimator calibration. See `V02_EXPERIMENTS.md` and `V02_BASELINE_FINDINGS.md`.
+The resource controls are transparent simulation parameters rather than calibrated degradation models. Critical-load service remains an accounting proxy until the reduced-order model includes explicit controllable load classes.
+
+Near-term v0.2 research should prioritize reserve-aware simulation policies, explicit critical/flexible load abstractions, restoration studies, forecast uncertainty, and validation against a documented test system.
 
 ## v0.3 — distributed intelligence
 Agent-level local twins/trust, consensus under packet loss, source isolation, decentralized fallback, and explicit studies of distributed evidence disagreement.
