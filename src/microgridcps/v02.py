@@ -325,6 +325,9 @@ def summarize_v02(result):
     disturbance = np.asarray(result["disturbance_active"], dtype=bool)
     alarms = np.asarray(result["anomaly"], dtype=bool)
     disturbance_alarm_fraction = float(np.mean(alarms[disturbance])) if np.any(disturbance) else 0.0
+    benign = ~(np.asarray(result["attack_active"], dtype=bool) | disturbance)
+    benign_step_alarm_fraction = float(np.mean(alarms[benign])) if np.any(benign) else 0.0
+    false_positive_rate = cyber["fp"] / (cyber["fp"] + cyber["tn"]) if cyber["fp"] + cyber["tn"] else 0.0
     return {
         "samples": samples,
         "anomaly_samples": int(np.sum(result["anomaly"])),
@@ -341,6 +344,8 @@ def summarize_v02(result):
         "end_to_end_attack_recall": end_to_end_attack_recall,
         "detection_delay_s": detection_delay_seconds(result["attack_active"], result["anomaly"], result["dt_h"] * 3600.0),
         "disturbance_alarm_fraction": disturbance_alarm_fraction,
+        "benign_step_alarm_fraction": benign_step_alarm_fraction,
+        "false_positive_rate": false_positive_rate,
         "service_resilience": service_resilience(result["served_kw"], result["load_kw"]),
         "mean_soc_uncertainty": float(np.nanmean(result["soc_uncertainty"])),
         "min_trust_soc": float(np.min(result["trust_soc"])),
