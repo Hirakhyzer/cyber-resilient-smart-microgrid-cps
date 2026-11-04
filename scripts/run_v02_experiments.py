@@ -72,6 +72,8 @@ def aggregate(rows: list[dict]) -> dict[str, dict[str, float]]:
         "unserved_energy_kwh",
         "communication_fault_fraction",
         "disturbance_alarm_fraction",
+        "benign_step_alarm_fraction",
+        "false_positive_rate",
         "mean_soc_uncertainty",
     ]
     output: dict[str, dict[str, float]] = {}
@@ -134,13 +136,14 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "summary.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
-    print("scenario\trecall_mean\tf1_mean\tservice_mean\tunserved_kwh_mean\tdelay_s_mean")
+    print("scenario\trecall_mean\tf1_mean\tfpr_mean\tbenign_alarm_mean\tservice_mean\tunserved_kwh_mean\tdelay_s_mean")
     for name in sorted(aggregates):
         a = aggregates[name]
         def value(metric: str) -> str:
             return f"{a[metric]['mean']:.4f}" if metric in a else "-"
         print(
-            f"{name}\t{value('recall')}\t{value('f1')}\t{value('service_resilience')}\t"
+            f"{name}\t{value('recall')}\t{value('f1')}\t{value('false_positive_rate')}\t"
+            f"{value('benign_step_alarm_fraction')}\t{value('service_resilience')}\t"
             f"{value('unserved_energy_kwh')}\t{value('detection_delay_s')}"
         )
 
